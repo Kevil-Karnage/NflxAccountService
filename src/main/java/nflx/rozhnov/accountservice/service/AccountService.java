@@ -1,6 +1,7 @@
 package nflx.rozhnov.accountservice.service;
 
 import nflx.rozhnov.accountservice.dto.enums.TransactionStatus;
+import nflx.rozhnov.accountservice.dto.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.request.AccountPutBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;
@@ -23,7 +24,7 @@ public class AccountService {
     private TransactionRepository transactionRepository;
 
     public AccountGetBalanceRs getAccountBalance(Long id) {
-        Account fromDb = accountRepository.findById(id).get();
+        Account fromDb = getAccountBalanceFromRepository(id);
 
         return new AccountGetBalanceRs(id, fromDb.getAmount(), ZonedDateTime.now());
     }
@@ -41,7 +42,7 @@ public class AccountService {
         );
 
         // обновляем баланс аккаунта
-        Account fromDb = accountRepository.findById(id).get();
+        Account fromDb = getAccountBalanceFromRepository(id);
         fromDb.setAmount(fromDb.getAmount() + rq.getAmount());
 
         // сохраняем
@@ -56,5 +57,13 @@ public class AccountService {
                 fromDb.getAmount(),
                 transaction.getTimestamp()
         );
+    }
+
+    private Account getAccountBalanceFromRepository(Long id) {
+        try {
+            return accountRepository.findById(id).get();
+        } catch (Exception e) {
+            throw new NotFoundAccountException(e.getMessage());
+        }
     }
 }
