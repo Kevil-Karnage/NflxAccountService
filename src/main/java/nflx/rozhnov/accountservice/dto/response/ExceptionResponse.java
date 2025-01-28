@@ -1,8 +1,12 @@
 package nflx.rozhnov.accountservice.dto.response;
 
 
-import lombok.AllArgsConstructor;
+import lombok.*;
 
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
 @AllArgsConstructor
 public class ExceptionResponse {
     private Integer code;

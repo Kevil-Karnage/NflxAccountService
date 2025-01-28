@@ -63,7 +63,7 @@ public class AccountService {
         try {
             return accountRepository.findById(id).get();
         } catch (Exception e) {
-            throw new NotFoundAccountException(e.getMessage());
+            throw new NotFoundAccountException();
         }
     }
 }

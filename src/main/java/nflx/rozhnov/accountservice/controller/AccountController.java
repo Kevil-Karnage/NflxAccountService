@@ -5,11 +5,12 @@ import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;
 import nflx.rozhnov.accountservice.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @RestController
-@RequestMapping(path = "/account", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/account", produces = APPLICATION_JSON_VALUE)
 public class AccountController {
 
     @Autowired
