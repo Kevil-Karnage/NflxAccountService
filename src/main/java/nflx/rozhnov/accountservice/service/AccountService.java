@@ -4,15 +4,19 @@ import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
+import nflx.rozhnov.accountservice.exception.TransactionNotSavedException;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.model.Transaction;
 import nflx.rozhnov.accountservice.repository.AccountRepository;
 import nflx.rozhnov.accountservice.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AccountService {
@@ -25,7 +29,7 @@ public class AccountService {
     public AccountGetBalanceRs getAccountBalance(Long id) {
         Account fromDb = getAccountBalanceFromRepository(id);
 
-        return new AccountGetBalanceRs(id, fromDb.getBalance(), ZonedDateTime.now());
+        return new AccountGetBalanceRs(id, fromDb.getBalance(), new Date());
     }
 
     public AccountAddBalanceRs addBalanceToAccount(Long id, AccountAddBalanceRq rq) {
@@ -42,18 +46,23 @@ public class AccountService {
         }
 
         // 2) создаём транзакцию пополнения
+        Date date = new Date();
+
         Transaction transaction = new Transaction(
-                null,
-                ZonedDateTime.now(),
+                UUID.randomUUID(),
+                date,
                 -1L,
                 id,
                 rq.getAmount()
         );
 
-
         // 3) сохраняем обновлённые данные и возвращаем пользователю
-        account = accountRepository.save(account);
-        transaction = transactionRepository.save(transaction);
+        try {
+            transaction = transactionRepository.save(transaction);
+            account = accountRepository.save(account);
+        } catch (Exception ex) {
+            throw new TransactionNotSavedException(ex.getMessage());
+        }
 
         return new AccountAddBalanceRs(
                 transaction.getId(),

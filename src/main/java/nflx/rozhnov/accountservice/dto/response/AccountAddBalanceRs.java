@@ -3,7 +3,7 @@ package nflx.rozhnov.accountservice.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -11,5 +11,5 @@ import java.util.UUID;
 public class AccountAddBalanceRs {
     private UUID transactionId;
     private double newBalance;
-    private ZonedDateTime timestamp;
+    private Date timestamp;
 }

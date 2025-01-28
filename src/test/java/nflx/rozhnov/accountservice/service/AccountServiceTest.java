@@ -16,11 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.verification.VerificationMode;
 
-import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -45,7 +43,7 @@ class AccountServiceTest {
     @DisplayName("getAccountBalance - correct")
     public void getAccountBalance_correct() {
         // Data
-        AccountGetBalanceRs expected = new AccountGetBalanceRs(ACCOUNT_ID, ACCOUNT_BALANCE, ZonedDateTime.now());
+        AccountGetBalanceRs expected = new AccountGetBalanceRs(ACCOUNT_ID, ACCOUNT_BALANCE, new Date());
 
         // Mockito
         when(accountRepository.findById(ACCOUNT_ID))

@@ -1,13 +1,11 @@
 package nflx.rozhnov.accountservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -16,9 +14,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class Transaction {
     @Id
-    @GeneratedValue
     private UUID id;
-    private ZonedDateTime timestamp;
+    private Date timestamp;
     private long fromAccount; // null, если пополнение аккаунта извне (не с другого аккаунта)
     private long toAccount;
     private double amount;

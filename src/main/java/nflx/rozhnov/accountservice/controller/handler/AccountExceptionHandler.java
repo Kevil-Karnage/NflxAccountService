@@ -2,6 +2,7 @@ package nflx.rozhnov.accountservice.controller.handler;
 
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.ExceptionResponse;
+import nflx.rozhnov.accountservice.exception.TransactionNotSavedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,5 +18,12 @@ public class AccountExceptionHandler extends ResponseEntityExceptionHandler {
         ExceptionResponse response = new ExceptionResponse(404, ex.getMessage());
         return handleExceptionInternal(ex, response,
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(TransactionNotSavedException.class)
+    private ResponseEntity<Object> handleTransactionNotSavedException(RuntimeException ex, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(501, ex.getMessage());
+        return handleExceptionInternal(ex, response,
+                new HttpHeaders(), HttpStatus.valueOf(501), request);
     }
 }
