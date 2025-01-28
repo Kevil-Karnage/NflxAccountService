@@ -1,7 +1,7 @@
 package nflx.rozhnov.accountservice.service;
 
 import nflx.rozhnov.accountservice.dto.enums.TransactionStatus;
-import nflx.rozhnov.accountservice.dto.exception.NotFoundAccountException;
+import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.request.AccountPutBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;

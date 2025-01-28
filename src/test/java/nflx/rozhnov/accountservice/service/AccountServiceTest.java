@@ -1,6 +1,6 @@
 package nflx.rozhnov.accountservice.service;
 
-import nflx.rozhnov.accountservice.dto.exception.NotFoundAccountException;
+import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.repository.AccountRepository;
@@ -54,13 +54,16 @@ class AccountServiceTest {
     @Test
     @DisplayName("getAccountBalance - NotFound")
     public void getAccountBalance_notFound() {
+        //Data
+        NotFoundAccountException exception = new NotFoundAccountException();
+
         // Mockito
         when(accountRepository.findById(ACCOUNT_ID))
-                .thenThrow(new RuntimeException(TEST_EXCEPTION_MESSAGE));
+                .thenThrow(exception);
 
         // Request and Check
         Assertions.assertThatThrownBy(() -> accountService.getAccountBalance(ACCOUNT_ID))
                 .isInstanceOf(NotFoundAccountException.class)
-                .hasMessageContaining(TEST_EXCEPTION_MESSAGE);
+                .hasMessageContaining(exception.getMessage());
     }
 }

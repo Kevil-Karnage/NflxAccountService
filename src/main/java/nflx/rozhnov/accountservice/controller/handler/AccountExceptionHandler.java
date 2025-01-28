@@ -1,6 +1,6 @@
 package nflx.rozhnov.accountservice.controller.handler;
 
-import nflx.rozhnov.accountservice.dto.exception.NotFoundAccountException;
+import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.ExceptionResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
