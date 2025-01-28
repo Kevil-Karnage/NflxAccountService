@@ -1,8 +1,8 @@
 package nflx.rozhnov.accountservice.controller;
 
-import nflx.rozhnov.accountservice.dto.request.AccountPutBalanceRq;
+import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
-import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;
+import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
 import nflx.rozhnov.accountservice.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +22,8 @@ public class AccountController {
     }
 
     @PostMapping("/{id}/balance")
-    public AccountPutBalanceRs putBalanceToAccount(@RequestBody AccountPutBalanceRq rq,
+    public AccountAddBalanceRs addBalanceToAccount(@RequestBody AccountAddBalanceRq rq,
                                                    @PathVariable("id") Long id) {
-        return service.putBalanceToAccount(id, rq);
+        return service.addBalanceToAccount(id, rq);
     }
 }

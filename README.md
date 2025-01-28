@@ -7,10 +7,12 @@
 GET /account/{id}/balance  
 ```
 
-### Пополнение баланса аккаунта
+### Пополнение баланса аккаунта 
 ```
-PUT /account/{id}/balance  
+POST /account/{id}/balance  
 ```
+В случае отсутствия аккаунта с таким id создастся новый аккаунт
+
 request body: 
 ```
 {

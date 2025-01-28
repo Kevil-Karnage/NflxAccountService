@@ -8,10 +8,8 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class AccountPutBalanceRs {
+public class AccountAddBalanceRs {
     private UUID transactionId;
-    private String status;
-    private String message;
-    private Double newBalance;
+    private double newBalance;
     private ZonedDateTime timestamp;
 }

@@ -1,10 +1,9 @@
 package nflx.rozhnov.accountservice.service;
 
-import nflx.rozhnov.accountservice.dto.enums.TransactionStatus;
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
-import nflx.rozhnov.accountservice.dto.request.AccountPutBalanceRq;
+import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
-import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;
+import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.model.Transaction;
 import nflx.rozhnov.accountservice.repository.AccountRepository;
@@ -13,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -26,44 +25,49 @@ public class AccountService {
     public AccountGetBalanceRs getAccountBalance(Long id) {
         Account fromDb = getAccountBalanceFromRepository(id);
 
-        return new AccountGetBalanceRs(id, fromDb.getAmount(), ZonedDateTime.now());
+        return new AccountGetBalanceRs(id, fromDb.getBalance(), ZonedDateTime.now());
     }
 
-    public AccountPutBalanceRs putBalanceToAccount(Long id, AccountPutBalanceRq rq) {
-        // создаём транзакцию
+    public AccountAddBalanceRs addBalanceToAccount(Long id, AccountAddBalanceRq rq) {
+        // 1) получаем аккаунт
+
+        Account account;
+        try {
+            // 1.1) пытаемся получить из бд
+            account = getAccountBalanceFromRepository(id);
+            account.setBalance(account.getBalance() + rq.getAmount());
+        } catch (Exception ex) {
+            // 1.2) если аккаунта с таким id нет, то создаем его:
+            account = new Account(id, rq.getAmount());
+        }
+
+        // 2) создаём транзакцию пополнения
         Transaction transaction = new Transaction(
-                UUID.randomUUID(),
-                TransactionStatus.PENDING.name(),
-                TransactionStatus.PENDING.getMessage(),
-                ZonedDateTime.now(),
                 null,
+                ZonedDateTime.now(),
+                -1L,
                 id,
                 rq.getAmount()
         );
 
-        // обновляем баланс аккаунта
-        Account fromDb = getAccountBalanceFromRepository(id);
-        fromDb.setAmount(fromDb.getAmount() + rq.getAmount());
 
-        // сохраняем
-        transactionRepository.save(transaction);
-        accountRepository.save(fromDb);
+        // 3) сохраняем обновлённые данные и возвращаем пользователю
+        account = accountRepository.save(account);
+        transaction = transactionRepository.save(transaction);
 
-        // возвращаем транзакцию
-        return new AccountPutBalanceRs(
+        return new AccountAddBalanceRs(
                 transaction.getId(),
-                transaction.getStatus(),
-                transaction.getMessage(),
-                fromDb.getAmount(),
+                account.getBalance(),
                 transaction.getTimestamp()
         );
     }
 
-    private Account getAccountBalanceFromRepository(Long id) {
-        try {
-            return accountRepository.findById(id).get();
-        } catch (Exception e) {
+    private Account getAccountBalanceFromRepository(Long id) throws NotFoundAccountException {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isEmpty()) {
             throw new NotFoundAccountException();
+        } else {
+            return accountOptional.get();
         }
     }
 }

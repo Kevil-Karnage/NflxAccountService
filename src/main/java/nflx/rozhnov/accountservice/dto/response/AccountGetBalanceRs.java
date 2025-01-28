@@ -8,7 +8,7 @@ import java.time.ZonedDateTime;
 @Data
 @AllArgsConstructor
 public class AccountGetBalanceRs {
-    private Long accountId;
-    private Double balance;
+    private long accountId;
+    private double balance;
     private ZonedDateTime timestamp;
 }

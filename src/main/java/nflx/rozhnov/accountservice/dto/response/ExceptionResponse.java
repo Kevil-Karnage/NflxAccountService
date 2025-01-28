@@ -9,6 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExceptionResponse {
-    private Integer code;
+    private int code;
     private String message;
 }

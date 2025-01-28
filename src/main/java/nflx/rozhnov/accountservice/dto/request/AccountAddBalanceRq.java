@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AccountPutBalanceRq {
-    private Double amount;
+public class AccountAddBalanceRq {
+    private double amount;
 }
