@@ -22,8 +22,8 @@ public class AccountExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(TransactionNotSavedException.class)
     private ResponseEntity<Object> handleTransactionNotSavedException(RuntimeException ex, WebRequest request) {
-        ExceptionResponse response = new ExceptionResponse(501, ex.getMessage());
+        ExceptionResponse response = new ExceptionResponse(500, ex.getMessage());
         return handleExceptionInternal(ex, response,
-                new HttpHeaders(), HttpStatus.valueOf(501), request);
+                new HttpHeaders(), HttpStatus.valueOf(500), request);
     }
 }
