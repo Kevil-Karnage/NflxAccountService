@@ -14,6 +14,7 @@ import nflx.rozhnov.accountservice.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class AccountService {
             // 1.1) пытаемся получить из бд
             account =  accountRepository.findById(id)
                     .orElseThrow(NotFoundAccountException::new);
-            account.setBalance(account.getBalance() + rq.getAmount());
+            account.setBalance(account.getBalance().add(rq.getAmount()));
         } catch (Exception ex) {
             // 1.2) если аккаунта с таким id нет, то создаем его:
             account = new Account(id, rq.getAmount());
@@ -52,7 +53,7 @@ public class AccountService {
         Transaction transaction = new Transaction(
                 UUID.randomUUID(),
                 date,
-                -1L,
+                null,
                 id,
                 rq.getAmount()
         );

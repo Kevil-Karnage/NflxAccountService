@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public class Transaction {
     @Id
     private UUID id;
     private Date timestamp;
-    private long fromAccount; // null, если пополнение аккаунта извне (не с другого аккаунта)
-    private long toAccount;
-    private double amount;
+    private Long fromAccount; // null, если пополнение аккаунта извне (не с другого аккаунта)
+    private Long toAccount;
+    private BigDecimal amount;
 }

@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -13,5 +15,5 @@ import lombok.RequiredArgsConstructor;
 public class Account {
     @Id
     private long id;
-    private double balance;
+    private BigDecimal balance;
 }
