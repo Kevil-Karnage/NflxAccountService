@@ -1,5 +1,6 @@
 package nflx.rozhnov.accountservice.controller;
 
+import lombok.RequiredArgsConstructor;
 import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
@@ -10,11 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(path = "/account", produces = APPLICATION_JSON_VALUE)
 public class AccountController {
-
-    @Autowired
-    private AccountService service;
+    private final AccountService service;
 
     @GetMapping("/{id}/balance")
     public AccountGetBalanceRs getAccountBalance(@PathVariable Long id) {
@@ -23,7 +23,7 @@ public class AccountController {
 
     @PostMapping("/{id}/balance")
     public AccountAddBalanceRs addBalanceToAccount(@RequestBody AccountAddBalanceRq rq,
-                                                   @PathVariable("id") Long id) {
+                                                   @PathVariable("id") long id) {
         return service.addBalanceToAccount(id, rq);
     }
 }

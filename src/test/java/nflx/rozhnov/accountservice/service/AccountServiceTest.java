@@ -4,6 +4,7 @@ import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
+import nflx.rozhnov.accountservice.kafka.KafkaProducer;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.model.Transaction;
 import nflx.rozhnov.accountservice.repository.AccountRepository;
@@ -27,13 +28,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
-    @InjectMocks
-    AccountService accountService = new AccountService();
-
     @Mock
     AccountRepository accountRepository;
     @Mock
     TransactionRepository transactionRepository;
+    @Mock
+    KafkaProducer kafkaProducer;
+
+    @InjectMocks
+    AccountService accountService = new AccountService(accountRepository, transactionRepository, kafkaProducer);
 
     private final Long ACCOUNT_ID = 123456789L;
     private final Double ACCOUNT_BALANCE = 123.456;
