@@ -1,6 +1,7 @@
 package nflx.rozhnov.accountservice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -27,22 +29,25 @@ public class AccountService {
     private final KafkaProducer kafka;
 
     public AccountGetBalanceRs getAccountBalance(long id) {
+        log.info("|---| Get account balance |---|");
         Account account = accountRepository.findById(id)
                 .orElseThrow(NotFoundAccountException::new);
 
+        log.info("|---| Get account balance: Success |---|");
         return new AccountGetBalanceRs(id, account.getBalance(), new Date());
     }
 
     public AccountAddBalanceRs addBalanceToAccount(long id, AccountAddBalanceRq rq) {
-        // 1) получаем аккаунт
+        log.info("|---| Add balance to account with id = {} |---|", id);
 
+        // 1) получаем аккаунт
         Account account;
         try {
             // 1.1) пытаемся получить из бд
             account =  accountRepository.findById(id)
                     .orElseThrow(NotFoundAccountException::new);
             account.setBalance(account.getBalance().add(rq.getAmount()));
-        } catch (Exception ex) {
+        } catch (NotFoundAccountException ex) {
             // 1.2) если аккаунта с таким id нет, то создаем его:
             account = new Account(id, rq.getAmount());
         }
@@ -64,7 +69,7 @@ public class AccountService {
         // 4 Отправляем в кафку
         kafka.sendMessage(transaction);
 
-
+        log.info("|---| Add balance to account with id = {}: Success |---|", id);
         return new AccountAddBalanceRs(
                 transaction.getId(),
                 account.getBalance(),
