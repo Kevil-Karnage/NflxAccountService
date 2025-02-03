@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ class AccountServiceTest {
     AccountService accountService = new AccountService(accountRepository, transactionRepository, kafkaProducer);
 
     private final Long ACCOUNT_ID = 123456789L;
-    private final Double ACCOUNT_BALANCE = 123.456;
+    private final BigDecimal ACCOUNT_BALANCE = new BigDecimal("123.456");
     private final Account ACCOUNT = new Account(ACCOUNT_ID, ACCOUNT_BALANCE);
 
     @Test
@@ -89,10 +90,10 @@ class AccountServiceTest {
                 null,
                 -1L,
                 ACCOUNT_ID,
-                account.getBalance() + rq.getAmount()
+                account.getBalance().add(rq.getAmount())
                 );
         AccountAddBalanceRs expectedRs = new AccountAddBalanceRs(
-                null, account.getBalance() + rq.getAmount(), null);
+                null, account.getBalance().add(rq.getAmount()), null);
 
         // Mockito
         when(accountRepository.findById(ACCOUNT_ID))

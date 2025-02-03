@@ -1,4 +1,17 @@
-# Account Service
+# Account Service - сервис для взаимодействия с аккаунтами
+
+## Запуск
+В application.yml Необходимо изменить следующие строки в соответствии с вашим данными
+```
+  datasource:
+    url: jdbc:postgresql://<hostDB>:<port>/<databaseName>
+    username: <user>
+    password: <password>
+  kafka:
+    bootstrap-servers: <hostKafka>:<portKafka>
+    topic: transaction
+```
+
 
 ## методы
 
@@ -6,6 +19,15 @@
 ```
 GET /account/{id}/balance  
 ```
+Формат ответа:
+```
+{
+    "accountId": 111222,
+    "balance": 123.4
+    "timestamp": <Data>
+}
+```
+#
 
 ### Пополнение баланса аккаунта 
 ```
@@ -17,5 +39,13 @@ request body:
 ```
 {
     'amount': 123.12
+}
+```
+Формат ответа:
+```
+{
+    "transactionId": <UUID>,
+    "newBalance": 123.12,
+    "timestamp": <Date>
 }
 ```
