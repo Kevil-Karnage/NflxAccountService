@@ -11,9 +11,9 @@
     bootstrap-servers: <hostKafka>:<portKafka>
     topic: transaction
 ```
+#
 
-
-## методы
+## Методы
 
 ### Получение баланса аккаунта
 ```
