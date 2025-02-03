@@ -2,6 +2,7 @@ package nflx.rozhnov.accountservice.service;
 
 import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
+import nflx.rozhnov.accountservice.exception.KafkaSendingException;
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
 import nflx.rozhnov.accountservice.kafka.KafkaProducer;
@@ -23,9 +24,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -37,7 +37,8 @@ class AccountServiceTest {
     KafkaProducer kafkaProducer;
 
     @InjectMocks
-    AccountService accountService = new AccountService(accountRepository, transactionRepository, kafkaProducer);
+    AccountService accountService;
+    //= new AccountService(accountRepository, transactionRepository, kafkaProducer);
 
     private final Long ACCOUNT_ID = 123456789L;
     private final BigDecimal ACCOUNT_BALANCE = new BigDecimal("123.456");
@@ -52,6 +53,7 @@ class AccountServiceTest {
         // Mockito
         when(accountRepository.findById(ACCOUNT_ID))
                 .thenReturn(Optional.of(ACCOUNT));
+
 
         // Request
         AccountGetBalanceRs actual = accountService.getAccountBalance(ACCOUNT_ID);
@@ -72,6 +74,7 @@ class AccountServiceTest {
         // Mockito
         when(accountRepository.findById(ACCOUNT_ID))
                 .thenThrow(exception);
+
 
         // Request and Check
         Assertions.assertThatThrownBy(() -> accountService.getAccountBalance(ACCOUNT_ID))
@@ -102,6 +105,7 @@ class AccountServiceTest {
                 .thenReturn(account);
         when(transactionRepository.save(any(Transaction.class)))
                 .thenReturn(expectedTransaction);
+        doNothing().when(kafkaProducer).sendMessage(any());
 
         // Request
         AccountAddBalanceRs actualRs = accountService.addBalanceToAccount(ACCOUNT_ID, rq);
@@ -134,6 +138,7 @@ class AccountServiceTest {
                 .thenReturn(account);
         when(transactionRepository.save(any(Transaction.class)))
                 .thenReturn(expectedTransaction);
+        doNothing().when(kafkaProducer).sendMessage(any());
 
         // Request
         AccountAddBalanceRs actualRs = accountService.addBalanceToAccount(ACCOUNT_ID, rq);
@@ -141,5 +146,36 @@ class AccountServiceTest {
         // Check
         Mockito.verify(accountRepository, times(1)).save(any());
         assertThat(actualRs).usingRecursiveComparison().isEqualTo(expectedRs);
+    }
+
+    @Test
+    @DisplayName("addBalanceToAccount - incorrect - Kafka exception")
+    public void addBalanceToAccount_incorrect_KafkaException() {
+        // Data
+        Account account = new Account(ACCOUNT_ID, ACCOUNT_BALANCE);
+        AccountAddBalanceRq rq = new AccountAddBalanceRq(ACCOUNT_BALANCE);
+        Transaction expectedTransaction = new Transaction(
+                null,
+                null,
+                -1L,
+                ACCOUNT_ID,
+                rq.getAmount()
+        );
+        AccountAddBalanceRs expectedRs = new AccountAddBalanceRs(
+                null, rq.getAmount(), null);
+
+        // Mockito
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.empty());
+        when(accountRepository.save(any()))
+                .thenReturn(account);
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenReturn(expectedTransaction);
+        doThrow(new KafkaSendingException()).when(kafkaProducer).sendMessage(any());
+
+        // Request and Check
+        Assertions.assertThatThrownBy(() -> accountService.addBalanceToAccount(ACCOUNT_ID, rq))
+                .isInstanceOf(KafkaSendingException.class)
+                .hasMessageContaining(new KafkaSendingException().getMessage());
     }
 }
