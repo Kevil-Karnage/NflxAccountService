@@ -3,12 +3,13 @@ package nflx.rozhnov.accountservice.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.ZonedDateTime;
+import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @AllArgsConstructor
 public class AccountGetBalanceRs {
-    private Long accountId;
-    private Double balance;
-    private ZonedDateTime timestamp;
+    private long accountId;
+    private BigDecimal balance;
+    private Date timestamp;
 }

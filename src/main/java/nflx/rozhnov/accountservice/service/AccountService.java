@@ -1,60 +1,98 @@
 package nflx.rozhnov.accountservice.service;
 
-import nflx.rozhnov.accountservice.dto.enums.TransactionStatus;
-import nflx.rozhnov.accountservice.dto.request.AccountPutBalanceRq;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
+import nflx.rozhnov.accountservice.dto.request.AccountAddBalanceRq;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
-import nflx.rozhnov.accountservice.dto.response.AccountPutBalanceRs;
+import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
+import nflx.rozhnov.accountservice.exception.TransactionNotSavedException;
+import nflx.rozhnov.accountservice.kafka.KafkaProducer;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.model.Transaction;
 import nflx.rozhnov.accountservice.repository.AccountRepository;
 import nflx.rozhnov.accountservice.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.ZonedDateTime;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
+    private final KafkaProducer kafka;
 
-    public AccountGetBalanceRs getAccountBalance(Long id) {
-        Account fromDb = accountRepository.findById(id).get();
+    public AccountGetBalanceRs getAccountBalance(long id) {
+        log.info("|---| Get account balance |---|");
+        Account account = accountRepository.findById(id)
+                .orElseThrow(NotFoundAccountException::new);
 
-        return new AccountGetBalanceRs(id, fromDb.getAmount(), ZonedDateTime.now());
+        log.info("|---| Get account balance: Success |---|");
+        return new AccountGetBalanceRs(id, account.getBalance(), new Date());
     }
 
-    public AccountPutBalanceRs putBalanceToAccount(Long id, AccountPutBalanceRq rq) {
-        // создаём транзакцию
+    public AccountAddBalanceRs addBalanceToAccount(long id, AccountAddBalanceRq rq) {
+        log.info("|---| Add balance to account with id = {} |---|", id);
+
+        // 1) получаем аккаунт
+        Account account;
+        try {
+            // 1.1) пытаемся получить из бд
+            account =  accountRepository.findById(id)
+                    .orElseThrow(NotFoundAccountException::new);
+            account.setBalance(account.getBalance().add(rq.getAmount()));
+        } catch (NotFoundAccountException ex) {
+            // 1.2) если аккаунта с таким id нет, то создаем его:
+            account = new Account(id, rq.getAmount());
+        }
+
+        // 2) создаём транзакцию пополнения
+        Date date = new Date();
+
         Transaction transaction = new Transaction(
                 UUID.randomUUID(),
-                TransactionStatus.PENDING.name(),
-                TransactionStatus.PENDING.getMessage(),
-                ZonedDateTime.now(),
+                date,
                 null,
                 id,
                 rq.getAmount()
         );
 
-        // обновляем баланс аккаунта
-        Account fromDb = accountRepository.findById(id).get();
-        fromDb.setAmount(fromDb.getAmount() + rq.getAmount());
+        // 3) сохраняем обновлённые данные и возвращаем пользователю
+        transaction = saveTransaction(transaction, account);
 
-        // сохраняем
-        transactionRepository.save(transaction);
-        accountRepository.save(fromDb);
+        // 4 Отправляем в кафку
+        kafka.sendMessage(transaction);
 
-        // возвращаем транзакцию
-        return new AccountPutBalanceRs(
+        log.info("|---| Add balance to account with id = {}: Success |---|", id);
+        return new AccountAddBalanceRs(
                 transaction.getId(),
-                transaction.getStatus(),
-                transaction.getMessage(),
-                fromDb.getAmount(),
+                account.getBalance(),
                 transaction.getTimestamp()
         );
+    }
+
+
+    @Transactional
+    private Transaction saveTransaction(Transaction transaction, Account account) {
+        try {
+            transaction = transactionRepository.save(transaction);
+        } catch (Exception ex) {
+            throw new TransactionNotSavedException();
+        }
+        try {
+            accountRepository.save(account);
+        } catch (Exception ex) {
+            // если не получилось обновить данные аккаунта, то и транзакцию удаляем
+            transactionRepository.deleteById(transaction.getId());
+            throw new TransactionNotSavedException();
+        }
+
+        return transaction;
     }
 }

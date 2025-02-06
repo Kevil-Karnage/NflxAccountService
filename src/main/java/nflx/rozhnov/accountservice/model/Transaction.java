@@ -1,23 +1,23 @@
 package nflx.rozhnov.accountservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-import java.time.ZonedDateTime;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 @Data
 @Entity
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class Transaction {
     @Id
     private UUID id;
-    private String status;
-    private String message;
-    private ZonedDateTime timestamp;
-    private Long fromAccount;
+    private Date timestamp;
+    private Long fromAccount; // null, если пополнение аккаунта извне (не с другого аккаунта)
     private Long toAccount;
-    private Double amount;
+    private BigDecimal amount;
 }
