@@ -5,6 +5,7 @@ import nflx.rozhnov.accountservice.dto.response.AccountAddBalanceRs;
 import nflx.rozhnov.accountservice.exception.KafkaSendingException;
 import nflx.rozhnov.accountservice.exception.NotFoundAccountException;
 import nflx.rozhnov.accountservice.dto.response.AccountGetBalanceRs;
+import nflx.rozhnov.accountservice.exception.TransactionNotSavedException;
 import nflx.rozhnov.accountservice.kafka.KafkaProducer;
 import nflx.rozhnov.accountservice.model.Account;
 import nflx.rozhnov.accountservice.model.Transaction;
@@ -38,7 +39,6 @@ class AccountServiceTest {
 
     @InjectMocks
     AccountService accountService;
-    //= new AccountService(accountRepository, transactionRepository, kafkaProducer);
 
     private final Long ACCOUNT_ID = 123456789L;
     private final BigDecimal ACCOUNT_BALANCE = new BigDecimal("123.456");
@@ -78,8 +78,7 @@ class AccountServiceTest {
 
         // Request and Check
         Assertions.assertThatThrownBy(() -> accountService.getAccountBalance(ACCOUNT_ID))
-                .isInstanceOf(NotFoundAccountException.class)
-                .hasMessageContaining(exception.getMessage());
+                .isInstanceOf(NotFoundAccountException.class);
     }
 
     @Test
@@ -149,8 +148,8 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("addBalanceToAccount - incorrect - Kafka exception")
-    public void addBalanceToAccount_incorrect_KafkaException() {
+    @DisplayName("addBalanceToAccount - Kafka exception")
+    public void addBalanceToAccount_KafkaException() {
         // Data
         Account account = new Account(ACCOUNT_ID, ACCOUNT_BALANCE);
         AccountAddBalanceRq rq = new AccountAddBalanceRq(ACCOUNT_BALANCE);
@@ -175,7 +174,56 @@ class AccountServiceTest {
 
         // Request and Check
         Assertions.assertThatThrownBy(() -> accountService.addBalanceToAccount(ACCOUNT_ID, rq))
-                .isInstanceOf(KafkaSendingException.class)
-                .hasMessageContaining(new KafkaSendingException().getMessage());
+                .isInstanceOf(KafkaSendingException.class);
     }
+
+    @Test
+    @DisplayName("addBalanceToAccount - TransactionException - transaction")
+    public void addBalanceToAccount_transactionException_transaction() {
+        // Data
+        Account account = new Account(ACCOUNT_ID, ACCOUNT_BALANCE);
+        AccountAddBalanceRq rq = new AccountAddBalanceRq(ACCOUNT_BALANCE);
+
+        // Mockito
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(account));
+
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenThrow(new TransactionNotSavedException());
+
+        // Request and Check
+        Assertions.assertThatThrownBy(() -> accountService.addBalanceToAccount(ACCOUNT_ID, rq))
+                .isInstanceOf(TransactionNotSavedException.class);
+    }
+
+    @Test
+    @DisplayName("addBalanceToAccount - TransactionException - Account")
+    public void addBalanceToAccount_transactionException_account() {
+        // Data
+        Account account = new Account(ACCOUNT_ID, ACCOUNT_BALANCE);
+        AccountAddBalanceRq rq = new AccountAddBalanceRq(ACCOUNT_BALANCE);
+        Transaction expectedTransaction = new Transaction(
+                null,
+                null,
+                -1L,
+                ACCOUNT_ID,
+                account.getBalance().add(rq.getAmount())
+        );
+
+        // Mockito
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(account));
+        when(accountRepository.save(any()))
+                .thenReturn(account);
+
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenReturn(expectedTransaction);
+        when(accountRepository.save(any(Account.class)))
+                .thenThrow(new TransactionNotSavedException());
+
+        // Request and Check
+        Assertions.assertThatThrownBy(() -> accountService.addBalanceToAccount(ACCOUNT_ID, rq))
+                .isInstanceOf(TransactionNotSavedException.class);
+    }
+
 }

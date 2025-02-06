@@ -83,14 +83,14 @@ public class AccountService {
         try {
             transaction = transactionRepository.save(transaction);
         } catch (Exception ex) {
-            throw new TransactionNotSavedException(ex.getMessage());
+            throw new TransactionNotSavedException();
         }
         try {
             accountRepository.save(account);
         } catch (Exception ex) {
             // если не получилось обновить данные аккаунта, то и транзакцию удаляем
             transactionRepository.deleteById(transaction.getId());
-            throw new TransactionNotSavedException(ex.getMessage());
+            throw new TransactionNotSavedException();
         }
 
         return transaction;
